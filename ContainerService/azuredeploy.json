@@ -1,0 +1,84 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "dnsNamePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Sets the Domain name prefix for the cluster.  The concatenation of the domain name and the regionalized DNS zone make up the fully qualified domain name associated with the public IP address."
+      }
+    },
+    "linuxAdminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "User name for the Linux Virtual Machines."
+      }
+    },
+    "sshRSAPublicKey": {
+      "type": "string",
+      "metadata": {
+        "description": "Configure all linux machines with the SSH RSA public key string.  Your key should include three parts, for example 'ssh-rsa AAAAB...snip...UcyupgH azureuser@linuxvm'"
+      }
+    }
+  },
+  "variables": {
+    "adminUsername": "[parameters('linuxAdminUsername')]",
+    "agentCount": "[int('2')]",
+    "agentsEndpointDNSNamePrefix": "[concat(parameters('dnsNamePrefix'),'agents')]",
+    "agentVMSize": "['Standard_D2']",
+    "masterCount": "[int('1')]",
+    "mastersEndpointDNSNamePrefix": "[concat(parameters('dnsNamePrefix'),'mgmt')]",
+    "orchestratorType": "['DCOS']",
+    "sshRSAPublicKey": "[parameters('sshRSAPublicKey')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.ContainerService/containerServices",
+      "location": "[resourceGroup().location]",
+      "name": "[concat('containerservice-',resourceGroup().name)]",
+      "properties": {
+        "orchestratorProfile": {
+          "orchestratorType": "[variables('orchestratorType')]"
+        },
+        "masterProfile": {
+          "count": "[variables('masterCount')]",
+          "dnsPrefix": "[variables('mastersEndpointDNSNamePrefix')]"
+        },
+        "agentPoolProfiles": [
+          {
+            "name": "agentpools",
+            "count": "[variables('agentCount')]",
+            "vmSize": "[variables('agentVMSize')]",
+            "dnsPrefix": "[variables('agentsEndpointDNSNamePrefix')]"
+          }
+        ],
+        "linuxProfile": {
+          "adminUsername": "[variables('adminUsername')]",
+          "ssh": {
+            "publicKeys": [
+              {
+                "keyData": "[variables('sshRSAPublicKey')]"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "masterFQDN": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.ContainerService/containerServices/', 'containerservice-', resourceGroup().name)).masterProfile.fqdn]"
+    },
+    "sshMaster0": {
+      "type": "string",
+      "value": "[concat('ssh ', variables('adminUsername'), '@', reference(concat('Microsoft.ContainerService/containerServices/', 'containerservice-', resourceGroup().name)).masterProfile.fqdn, ' -A -p 2200')]"
+    },
+    "agentFQDN": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.ContainerService/containerServices/', 'containerservice-', resourceGroup().name)).agentPoolProfiles[0].fqdn]"
+    }
+  }
+}

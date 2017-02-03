@@ -1,0 +1,40 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountName": {
+      "value": "bjdapp02sa001"
+    },
+    "localAdminUsername": {
+      "value": "manager"
+    },
+    "localAdminPassword": {
+      "reference": {
+        "keyVault": {
+            "id": "/subscriptions/.../resourceGroups/Core_Infra_KeyVault_RG/providers/Microsoft.KeyVault/vaults/BjdCoreKeyVault"
+        },
+        "secretName": "managerPassword"
+      }
+    },
+    "webVmNamePrefix": {
+      "value": "app02-web-"
+    },
+    "sqlVmName": {
+      "value": "app02-sql"
+    },
+    "domainAdminUsername": {
+      "value": "manager"
+    },
+    "domainAdminPassword": {
+      "reference": {
+        "keyVault": {
+            "id": "/subscriptions/.../resourceGroups/Core_Infra_KeyVault_RG/providers/Microsoft.KeyVault/vaults/BjdCoreKeyVault"
+        },
+        "secretName": "managerPassword"
+      }
+    },
+    "domainToJoin": {
+      "value": "bjdazure.demo"
+    }
+  }
+}

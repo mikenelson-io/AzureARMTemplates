@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sql_server_name": {
+            "value": "bjdsql001"
+        },
+        "storageAccounts_name": {
+            "value": "bjdpdffuncsa001"
+        },
+        "serverfarms_name": {
+            "value": "WestUSPlan"
+        },
+        "sites_name": {
+            "value": "bjdpdffunc"
+        },
+        "database_name": {
+            "value": "bjdsql001/bjdpdfdb"
+        },
+        "firewallRules_azure_name": {
+            "value": "bjdsql001/AllowAllWindowsAzureIps"
+        },
+        "firewallRules_client_name": {
+            "value": "bjdsql001/ClientIPAddress_2016-11-1_12-23-22"
+        },
+        "firewallRules_client_ip" : {
+            "value": ""
+        }
+    }
+}

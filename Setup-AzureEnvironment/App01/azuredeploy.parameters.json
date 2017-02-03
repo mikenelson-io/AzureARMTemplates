@@ -1,0 +1,14 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachines_adminPassword": {
+      "reference": {
+        "keyVault": {
+            "id": "/subscriptions/.../resourceGroups/Core_Infra_KeyVault_RG/providers/Microsoft.KeyVault/vaults/BjdCoreKeyVault"
+        },
+        "secretName": "managerPassword"
+      }
+    }
+  }
+}

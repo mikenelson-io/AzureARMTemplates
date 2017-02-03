@@ -1,0 +1,386 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmLinuxName": {
+      "type": "string"
+    },
+    "vmWindowsName": {
+      "type": "string"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of storage account for VMs"
+      }
+    },
+    "diagstorageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of Diagnostics storage account"
+      }
+    },
+    "localAdminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Admin username"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring"
+    },
+    "localAdminSSHKey": {
+      "type": "string",
+      "metadata": {
+        "description": "Admin ssh Key"
+      }
+    },
+    "SearchDomain": {
+      "type": "string",
+      "defaultValue": "example.info",
+      "metadata": {
+        "description": "Search DNS Name to use for VM names"
+      }
+    },
+    "numberOfInstances": {
+      "type": "int",
+      "defaultValue": 1
+    },
+    "domainAdminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "DomainAdmin username"
+      }
+    },
+    "domainAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "DomainAdmin password"
+      }
+    },
+    "domainToJoin": {
+      "type": "string",
+      "metadata": {
+        "description": "The FQDN of the AD domain to join"
+      }
+    }
+  },
+  "variables": {
+    "location": "southcentralus",
+    
+	  "virtualNetworkName": "BJD-Core-VNet-001",
+    "coreResourceGroupName": "Core_Infra_Network_RG",
+
+	  "SubnetName": "mgmt",
+    "vnetID": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', variables('coreResourceGroupName'), '/providers/Microsoft.Network/virtualNetworks/' , variables('virtualNetworkName'))]",
+    "SubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetName'))]",
+
+    "VmSize": "Standard_DS1_v2",
+    "lxNICPrefix": "[concat(parameters('vmLinuxName'), '-nic')]",
+    "lxPIPPrefix": "[concat(parameters('vmLinuxName'), '-pip')]",
+    "lxImageOffer":  "RHEL",
+    "lxImagePublisher": "RedHat",
+    "lxImageSKU": "7.2",
+    "lxImageVersion": "latest",
+    "lxOSType": "Linux",
+
+    "wiNICPrefix": "[concat(parameters('vmWindowsName'), '-nic')]",
+    "wiPIPPrefix": "[concat(parameters('vmWindowsName'), '-pip')]",
+    "wiImageOffer":  "WindowsServer",
+    "wiImagePublisher": "MicrosoftWindowsServer",
+    "wiImageSKU": "2012-R2-Datacenter",
+    "wiImageVersion": "latest",
+    "wiOSType": "Windows",
+
+    "vhdStorageType":     "Premium_LRS",
+    "diagStorageType":     "Standard_LRS",
+
+    "fileUri": "http://bjdcoresa001.blob.core.windows.net/scripts/post-dhcp-config.sh",
+    "commandToExecute":  "[concat('sh ./post-dhcp-config.sh ', parameters('SearchDomain'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('storageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "accountType": "[variables('vhdStorageType')]"
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('diagstorageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "accountType": "[variables('diagStorageType')]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('lxPIPPrefix'), copyindex())]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('numberOfInstances')]"
+      },
+      "properties": {
+          "publicIPAllocationMethod": "Dynamic",
+          "idleTimeoutInMinutes": 4
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('wiPIPPrefix'), copyindex())]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('numberOfInstances')]"
+      },
+      "properties": {
+          "publicIPAllocationMethod": "Dynamic",
+          "idleTimeoutInMinutes": 4
+      },
+      "resources": [],
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('lxPIPPrefix'), copyindex())]"
+      ]
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('lxNICPrefix'), copyindex())]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('numberOfInstances')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('lxPIPPrefix'), copyindex())]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('SubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('lxPIPPrefix'), copyindex()))]"
+              }              
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('wiNICPrefix'), copyindex())]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('numberOfInstances')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('wiPIPPrefix'), copyindex())]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('SubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('wiPIPPrefix'), copyindex()))]"
+              }  
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(parameters('vmLinuxName'), copyindex())]",
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": "[parameters('numberOfInstances')]"
+      },
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('lxNICPrefix'), copyindex())]",
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('diagstorageAccountName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('VmSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('lxImagePublisher')]",
+            "offer": "[variables('lxImageOffer')]",
+            "sku": "[variables('lxImageSKU')]",
+            "version": "[variables('lxImageVersion')]"
+          },
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/', parameters('vmLinuxName'), '-osdisk-', copyindex(), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "osProfile": {
+          "computerName": "[concat(parameters('vmLinuxName'), copyIndex())]",
+          "adminUsername": "[parameters('localAdminUsername')]",
+          "linuxConfiguration": {
+                        "disablePasswordAuthentication": true,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path":  "[concat('/home/', parameters('localAdminUsername'),'/.ssh/authorized_keys')]",
+                                    "keyData": "[parameters('localAdminSSHKey')]"
+                                }
+                            ]
+                        }
+                    },
+                    "secrets": []
+
+          
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('lxNICPrefix'),copyindex()))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+             "enabled": "true",
+             "storageUri": "[concat('http://',parameters('diagstorageAccountName'),'.blob.core.windows.net')]"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('vmLinuxName'), copyindex(), '/installcustomscript')]",
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": "[parameters('numberOfInstances')]"
+      },      
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmLinuxName'), copyindex())]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.OSTCExtensions",
+        "type": "CustomScriptForLinux",
+        "typeHandlerVersion": "1.4",
+        "settings": {
+          "fileUris": [ 
+              "[variables('fileUri')]"
+          ],
+          "commandToExecute": "[variables('commandToExecute')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(parameters('vmWindowsName'), copyindex())]",
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": "[parameters('numberOfInstances')]"
+      },
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('wiNICPrefix'), copyindex())]",
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('diagstorageAccountName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('VmSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('wiImagePublisher')]",
+            "offer": "[variables('wiImageOffer')]",
+            "sku": "[variables('wiImageSKU')]",
+            "version": "[variables('wiImageVersion')]"
+          },
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/', parameters('vmWindowsName'), '-osdisk-', copyindex(), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "osProfile": {
+          "computerName": "[concat(parameters('vmWindowsName'), copyIndex())]",
+          "adminUsername": "[parameters('localAdminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('wiNICPrefix'),copyindex()))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+             "enabled": "true",
+             "storageUri": "[concat('http://',parameters('diagstorageAccountName'),'.blob.core.windows.net')]"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('vmWindowsName'), copyindex(), '/joindomain')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmWindowsName'), copyindex())]"
+      ],
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": "[parameters('numberOfInstances')]"
+      },
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "JsonADDomainExtension",
+        "typeHandlerVersion": "1.0",
+        "settings": {
+          "Name": "[parameters('domainToJoin')]",
+          "OUPath": "",
+          "User": "[concat(parameters('domainToJoin'), '\\', parameters('domainAdminUsername'))]",
+          "Restart": "true",
+          "Options": 3
+        },
+        "protectedsettings": {
+          "Password": "[parameters('domainAdminPassword')]"
+        }
+      }
+    },
+  ]
+}

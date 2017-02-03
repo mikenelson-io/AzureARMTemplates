@@ -1,0 +1,472 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "TM_Profile_Root": {
+            "type": "String"
+        },
+        "TM_Profile_Asia": {
+            "type": "String"
+        },
+        "TM_Profile_Europe": {
+            "type": "String"
+        },
+        "TM_Profile_America": {
+            "type": "String"
+        },
+        "AppService_Plan-USEast": {
+            "type": "String"
+        },
+        "AppService_Plan-USWest": {
+            "type": "String"
+        },
+        "AppService_Plan-Europe": {
+            "type": "String"
+        },
+        "AppService_Plan-Asia": {
+            "type": "String"
+        },
+        "AppService_USEast": {
+            "type": "String"
+        },
+        "AppService_USWest": {
+            "type": "String"
+        },
+        "AppService_Asia": {
+            "type": "String"
+        },
+        "AppService_Europe": {
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "name": "[parameters('TM_Profile_Root')]",
+            "apiVersion": "2015-11-01",
+            "location": "global",
+            "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Performance",
+                "dnsConfig": {
+                    "relativeName": "[parameters('TM_Profile_Root')]",
+                    "fqdn": "[concat(parameters('TM_Profile_Root'),'.trafficmanager.net')]",
+                    "ttl": 300
+                },
+                "monitorConfig": {
+                    "protocol": "HTTP",
+                    "port": 80,
+                    "path": "/ServerDebug.aspx"
+                },
+                "endpoints": [
+                    {
+                        "name": "Europe",
+                        "type": "Microsoft.Network/trafficManagerProfiles/nestedEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', toLower(resourceGroup().name), '/providers/Microsoft.Network/trafficManagerProfiles/' , parameters('TM_Profile_Europe'))]",
+                            "endpointLocation": "West Europe",
+                            "minChildEndpoints": 1
+                        }
+                    },
+                    {
+                        "name": "Asia",
+                        "type": "Microsoft.Network/trafficManagerProfiles/nestedEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', toLower(resourceGroup().name), '/providers/Microsoft.Network/trafficManagerProfiles/' , parameters('TM_Profile_Asia'))]",
+                            "endpointLocation": "Japan West",
+                            "minChildEndpoints": 1
+                        }
+                    },
+                    {
+                        "name": "USA",
+                        "type": "Microsoft.Network/trafficManagerProfiles/nestedEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', toLower(resourceGroup().name), '/providers/Microsoft.Network/trafficManagerProfiles/' , parameters('TM_Profile_America'))]",
+                            "endpointLocation": "West US",
+                            "minChildEndpoints": 1
+                        }
+                    }
+                ]
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/trafficManagerProfiles', parameters('TM_Profile_Europe'))]",
+                "[resourceId('Microsoft.Network/trafficManagerProfiles', parameters('TM_Profile_Asia'))]",
+                "[resourceId('Microsoft.Network/trafficManagerProfiles', parameters('TM_Profile_America'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "name": "[parameters('TM_Profile_Asia')]",
+            "apiVersion": "2015-11-01",
+            "location": "global",
+            "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Priority",
+                "dnsConfig": {
+                    "relativeName": "[parameters('TM_Profile_Asia')]",
+                    "fqdn": "[concat(parameters('TM_Profile_Asia'),'.trafficmanager.net')]",
+                    "ttl": 300
+                },
+                "monitorConfig": {
+                    "protocol": "HTTP",
+                    "port": 80,
+                    "path": "/ServerDebug.aspx"
+                },
+                "endpoints": [
+                    {
+                        "name": "Asia",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[resourceId('Microsoft.Web/sites', parameters('AppService_Asia'))]",
+                            "target": "[concat(parameters('AppService_Asia'),'.azurewebsites.net')]",
+                            "weight": 1,
+                            "priority": 1,
+                            "endpointLocation": "Japan East"
+                        }
+                    },
+                    {
+                        "name": "WestUS",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[resourceId('Microsoft.Web/sites', parameters('AppService_USWest'))]",
+                            "target": "[concat(parameters('AppService_USWest'),'.azurewebsites.net')]",
+                            "weight": 1,
+                            "priority": 5,
+                            "endpointLocation": "West US"
+                        }
+                    }
+                ]
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('AppService_Asia'))]",
+                "[resourceId('Microsoft.Web/sites', parameters('AppService_USWest'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "name": "[parameters('TM_Profile_Europe')]",
+            "apiVersion": "2015-11-01",
+            "location": "global",
+            "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Priority",
+                "dnsConfig": {
+                    "relativeName": "[parameters('TM_Profile_Europe')]",
+                    "fqdn": "[concat(parameters('TM_Profile_Europe'),'.trafficmanager.net')]",
+                    "ttl": 300
+                },
+                "monitorConfig": {
+                    "protocol": "HTTP",
+                    "port": 80,
+                    "path": "/ServerDebug.aspx"
+                },
+                "endpoints": [
+                    {
+                        "name": "Europe",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[resourceId('Microsoft.Web/sites', parameters('AppService_Europe'))]",
+                            "target": "[concat(parameters('AppService_Europe'),'.azurewebsites.net')]",
+                            "weight": 1,
+                            "priority": 1,
+                            "endpointLocation": "West Europe"
+                        }
+                    },
+                    {
+                        "name": "USEast",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[resourceId('Microsoft.Web/sites', parameters('AppService_USEast'))]",
+                            "target": "[concat(parameters('AppService_USEast'),'.azurewebsites.net')]",
+                            "weight": 1,
+                            "priority": 5,
+                            "endpointLocation": "East US 2"
+                        }
+                    }
+                ]
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('AppService_Europe'))]",
+                "[resourceId('Microsoft.Web/sites', parameters('AppService_USEast'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "name": "[parameters('TM_Profile_America')]",
+            "apiVersion": "2015-11-01",
+            "location": "global",
+            "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Priority",
+                "dnsConfig": {
+                    "relativeName": "[parameters('TM_Profile_America')]",
+                    "fqdn": "[concat(parameters('TM_Profile_America'),'.trafficmanager.net')]",
+                    "ttl": 300
+                },
+                "monitorConfig": {
+                    "protocol": "HTTP",
+                    "port": 80,
+                    "path": "/ServerDebug.aspx"
+                },
+                "endpoints": [
+                    {
+                        "name": "WestUSA",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[resourceId('Microsoft.Web/sites', parameters('AppService_USWest'))]",
+                            "target": "[concat(parameters('AppService_USWest'),'.azurewebsites.net')]",
+                            "weight": 100,
+                            "priority": 1,
+                            "endpointLocation": "West US"
+                        }
+                    },
+                    {
+                        "name": "EastUSA",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[resourceId('Microsoft.Web/sites', parameters('AppService_USEast'))]",
+                            "target": "[concat(parameters('AppService_USEast'),'-east.azurewebsites.net')]",
+                            "weight": 1,
+                            "priority": 5,
+                            "endpointLocation": "East US 2"
+                        }
+                    }
+                ]
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('AppService_USWest'))]",
+                "[resourceId('Microsoft.Web/sites', parameters('AppService_USEast'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            },
+            "name": "[parameters('AppService_Plan-USEast')]",
+            "apiVersion": "2015-08-01",
+            "location": "East US 2",
+            "properties": {
+                "name": "[parameters('AppService_Plan-USEast')]",
+                "numberOfWorkers": 1
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            },
+            "name": "[parameters('AppService_Plan-USWest')]",
+            "apiVersion": "2015-08-01",
+            "location": "West US",
+            "properties": {
+                "name": "[parameters('AppService_Plan-USWest')]",
+                "numberOfWorkers": 1
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            },
+            "name": "[parameters('AppService_Plan-Europe')]",
+            "apiVersion": "2015-08-01",
+            "location": "West Europe",
+            "properties": {
+                "name": "[parameters('AppService_Plan-Europe')]",
+                "numberOfWorkers": 1
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            },
+            "name": "[parameters('AppService_Plan-Asia')]",
+            "apiVersion": "2015-08-01",
+            "location": "Japan East",
+            "properties": {
+                "name": "[parameters('AppService_Plan-Asia')]",
+                "numberOfWorkers": 1
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "name": "[parameters('AppService_USEast')]",
+            "apiVersion": "2015-08-01",
+            "location": "East US 2",
+            "properties": {
+                "name": "[parameters('AppService_USEast')]",
+                "hostNames": [
+                    "[concat(parameters('AppService_USEast'),'.azurewebsites.net')]"
+                ],
+                "enabledHostNames": [
+                    "[concat(parameters('AppService_USEast'),'.azurewebsites.net')]",
+                    "[concat(parameters('AppService_USEast'),'.scm.azurewebsites.net')]"
+                ],
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('AppService_USEast'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(parameters('AppService_USEast'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('AppService_Plan-USEast'))]"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('AppService_Plan-USEast'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "name": "[parameters('AppService_USWest')]",
+            "apiVersion": "2015-08-01",
+            "location": "West US",
+            "properties": {
+                "name": "[parameters('AppService_USWest')]",
+                "hostNames": [
+                    "[concat(parameters('AppService_USWest'),'.azurewebsites.net')]"
+                ],
+                "enabledHostNames": [
+                    "[concat(parameters('AppService_USWest'),'.azurewebsites.net')]",
+                    "[concat(parameters('AppService_USWest'),'.scm.azurewebsites.net')]"
+                ],
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('AppService_USWest'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(parameters('AppService_USWest'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('AppService_Plan-USWest'))]"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('AppService_Plan-USWest'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "name": "[parameters('AppService_Asia')]",
+            "apiVersion": "2015-08-01",
+            "location": "Japan East",
+            "properties": {
+                "name": "[parameters('AppService_Asia')]",
+                "hostNames": [
+                    "[concat(parameters('AppService_Asia'),'.azurewebsites.net')]"
+                ],
+                "enabledHostNames": [
+                    "[concat(parameters('AppService_Asia'),'.azurewebsites.net')]",
+                    "[concat(parameters('AppService_Asia'),'.scm.azurewebsites.net')]"
+                ],
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('AppService_Asia'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(parameters('AppService_Asia'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('AppService_Plan-Asia'))]"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('AppService_Plan-Asia'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "name": "[parameters('AppService_Europe')]",
+            "apiVersion": "2015-08-01",
+            "location": "West Europe",
+            "properties": {
+                "name": "[parameters('AppService_Europe')]",
+                "hostNames": [
+                    "[concat(parameters('AppService_Europe'),'.azurewebsites.net')]"
+                ],
+                "enabledHostNames": [
+                    "[concat(parameters('AppService_Europe'),'.azurewebsites.net')]",
+                    "[concat(parameters('AppService_Europe'),'.scm.azurewebsites.net')]"
+                ],
+                "hostNameSslStates": [                   
+                    {
+                        "name": "[concat(parameters('AppService_Europe'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(parameters('AppService_Europe'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('AppService_Plan-Europe'))]"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('AppService_Plan-Europe'))]"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,42 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "TM_Profile_Root": {
+            "value": "bjd5"
+        },
+        "TM_Profile_Asia": {
+            "value": "bjd5asia"
+        },
+        "TM_Profile_Europe": {
+            "value": "bjd5europe"
+        },
+        "TM_Profile_America": {
+            "value": "bjd5usa"
+        },
+        "AppService_Plan-USEast": {
+            "value": "EastUsPlan5"
+        },
+        "AppService_Plan-USWest": {
+            "value": "WestUsPlan5"
+        },
+        "AppService_Plan-Europe": {
+            "value": "WestEuropePlan5"
+        },
+        "AppService_Plan-Asia": {
+            "value": "EastJapanPlan5"
+        },
+        "AppService_USEast": {
+            "value": "bjd5usa-east"
+        },
+        "AppService_USWest": {
+            "value": "bjd5usa-west"
+        },
+        "AppService_Europe": {
+            "value": "bjd5europe-west"
+        },
+        "AppService_Asia": {
+            "value": "bjd5japan-east"
+        }
+    }
+}

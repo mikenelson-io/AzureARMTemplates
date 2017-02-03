@@ -1,0 +1,49 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmWindowsName": {
+      "value": "bjd-jump-win"
+    },
+    "vmLinuxName": {
+      "value": "bjd-jump-linux"
+    },
+    "storageAccountName": {
+      "value": "bjdjpsa01"
+    },
+    "diagstorageAccountName": {
+      "value": "bjddiagsa003"
+    },
+    "localAdminUsername": {
+      "value": "manager"
+    },
+    "localAdminSSHKey": {
+      "value": ""
+    },
+    "SearchDomain": {
+      "value": "bjdazure.demo"
+    },
+    "adminPassword": {
+        "reference": {
+            "keyVault": {
+                "id": "/subscriptions/.../Core_Infra_KeyVault_RG/providers/Microsoft.KeyVault/vaults/BjdCoreKeyVault"
+            },
+            "secretName": "managerPassword"
+        }
+    },
+    "domainAdminUsername": {
+      "value": "manager"
+    },
+    "domainAdminPassword": {
+      "reference": {
+        "keyVault": {
+            "id": "/subscriptions/.../resourceGroups/Core_Infra_KeyVault_RG/providers/Microsoft.KeyVault/vaults/BjdCoreKeyVault"
+        },
+        "secretName": "managerPassword"
+      }
+    },
+    "domainToJoin": {
+      "value": "bjdazure.demo"
+    }
+  }
+}

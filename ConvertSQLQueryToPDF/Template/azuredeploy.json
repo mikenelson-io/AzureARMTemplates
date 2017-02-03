@@ -1,0 +1,181 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sql_server_name": {
+            "type": "String"
+        },
+        "storageAccounts_name": {
+            "type": "String"
+        },
+        "serverfarms_name": {
+            "type": "String"
+        },
+        "sites_name": {
+            "type": "String"
+        },
+        "database_name": {
+            "type": "String"
+        },
+        "firewallRules_azure_name": {
+            "type": "String"
+        },
+        "firewallRules_client_name": {
+            "type": "String"
+        },
+        "firewallRules_client_ip": {
+            "type": "String"
+        }, 
+        "password" : {
+            "type": "securestring"
+        }
+
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Sql/servers",
+            "kind": "v12.0",
+            "name": "[parameters('sql_server_name')]",
+            "apiVersion": "2014-04-01-preview",
+            "location": "West US",
+            "properties": {
+                "administratorLogin": "manager",
+                "administratorLoginPassword": "[parameters('password')]",
+                "version": "12.0"
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "name": "[parameters('storageAccounts_name')]",
+            "apiVersion": "2016-01-01",
+            "location": "westus",
+            "tags": {},
+            "properties": {},
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "Y1",
+                "tier": "Dynamic",
+                "size": "Y1",
+                "family": "Y",
+                "capacity": 0
+            },
+            "kind": "functionapp",
+            "name": "[parameters('serverfarms_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "West US",
+            "properties": {
+                "name": "[parameters('serverfarms_name')]",
+                "numberOfWorkers": 0
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "kind": "functionapp",
+            "name": "[parameters('sites_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "West US",
+            "properties": {
+                "name": "[parameters('sites_name')]",
+                "hostNames": [
+                    "[concat(parameters('sites_name'),'.azurewebsites.net')]"
+                ],
+                "enabledHostNames": [
+                    "[concat(parameters('sites_name'),'.azurewebsites.net')]",
+                    "[concat(parameters('sites_name'),'.scm.azurewebsites.net')]"
+                ],
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('sites_name'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(parameters('sites_name'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_name'))]"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases",
+            "kind": "v12.0,user",
+            "name": "[parameters('database_name')]",
+            "apiVersion": "2014-04-01-preview",
+            "location": "West US",
+            "properties": {
+                "databaseId": "49adbab5-5bd3-4a2c-9a6e-a7162254c332",
+                "edition": "Standard",
+                "status": "Online",
+                "serviceLevelObjective": "S2",
+                "collation": "SQL_Latin1_General_CP1_CI_AS",
+                "maxSizeBytes": "268435456000",
+                "creationDate": "2016-12-19T17:58:22.217Z",
+                "currentServiceObjectiveId": "455330e1-00cd-488b-b5fa-177c226f28b7",
+                "requestedServiceObjectiveId": "455330e1-00cd-488b-b5fa-177c226f28b7",
+                "requestedServiceObjectiveName": "S2",
+                "sampleName": null,
+                "defaultSecondaryLocation": "East US",
+                "earliestRestoreDate": "2016-12-19T18:08:58.49Z",
+                "elasticPoolName": null,
+                "containmentState": 2,
+                "readScale": "Disabled"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('sql_server_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "kind": "v12.0",
+            "name": "[parameters('firewallRules_azure_name')]",
+            "apiVersion": "2014-04-01-preview",
+            "location": "West US",
+            "properties": {
+                "startIpAddress": "0.0.0.0",
+                "endIpAddress": "0.0.0.0"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('sql_server_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "kind": "v12.0",
+            "name": "[parameters('firewallRules_client_name')]",
+            "apiVersion": "2014-04-01-preview",
+            "location": "West US",
+            "properties": {
+                "startIpAddress": "[parameters('firewallRules_client_ip')]",
+                "endIpAddress": "[parameters('firewallRules_client_ip')]"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('sql_server_name'))]"
+            ]
+        }
+    ]
+}

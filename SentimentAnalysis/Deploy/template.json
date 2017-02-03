@@ -1,0 +1,287 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "databaseAccounts_bjdtweets_name": {
+            "defaultValue": null,
+            "type": "SecureString"
+        },
+        "accounts_TweetAnalysis_name": {
+            "defaultValue": "TweetAnalysis",
+            "type": "String"
+        },
+        "databaseAccounts_bjdtweets_name_1": {
+            "defaultValue": "bjdtweets",
+            "type": "String"
+        },
+        "workflows_ProcessTwitterApp_name": {
+            "defaultValue": "ProcessTwitterApp",
+            "type": "String"
+        },
+        "storageAccounts_bjdfunctionssa001_name": {
+            "defaultValue": "bjdfunctionssa001",
+            "type": "String"
+        },
+        "serverfarms_LinuxServicePlan_name": {
+            "defaultValue": "LinuxServicePlan",
+            "type": "String"
+        },
+        "serverfarms_SouthCentralUSPlan_name": {
+            "defaultValue": "SouthCentralUSPlan",
+            "type": "String"
+        },
+        "sites_bjdfunctions_name": {
+            "defaultValue": "bjdfunctions",
+            "type": "String"
+        },
+        "sites_bjdlinux_name": {
+            "defaultValue": "bjdlinux",
+            "type": "String"
+        },
+        "workflows_ProcessTwitterApp_connectionId": {
+            "defaultValue": "",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.CognitiveServices/accounts",
+            "sku": {
+                "name": "S1"
+            },
+            "kind": "TextAnalytics",
+            "name": "[parameters('accounts_TweetAnalysis_name')]",
+            "apiVersion": "2016-02-01-preview",
+            "location": "westus",
+            "properties": {},
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "kind": "GlobalDocumentDB",
+            "name": "[parameters('databaseAccounts_bjdtweets_name_1')]",
+            "apiVersion": "2015-04-08",
+            "location": "South Central US",
+            "tags": {},
+            "properties": {
+                "databaseAccountOfferType": "Standard",
+                "consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session",
+                    "maxIntervalInSeconds": 5,
+                    "maxStalenessPrefix": 100
+                },
+                "name": "[parameters('databaseAccounts_bjdtweets_name')]"
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "name": "[parameters('workflows_ProcessTwitterApp_name')]",
+            "apiVersion": "2016-06-01",
+            "location": "southcentralus",
+            "properties": {
+                "state": "Disabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "When_a_new_tweet_is_posted": {
+                            "recurrence": {
+                                "frequency": "Minute",
+                                "interval": 3
+                            },
+                            "splitOn": "@triggerBody()?.value",
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "api": {
+                                        "runtimeUrl": "https://logic-apis-southcentralus.azure-apim.net/apim/twitter"
+                                    },
+                                    "connection": {
+                                        "name": "@parameters('$connections')['twitter']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/onnewtweet",
+                                "queries": {
+                                    "searchQuery": "#Azure"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "AnalyzeTweets": {
+                            "runAfter": {},
+                            "type": "Function",
+                            "inputs": {
+                                "body": {
+                                    "RetweetCount": "@triggerBody()['RetweetCount']",
+                                    "TweetBy": "@triggerBody()['TweetedBy']",
+                                    "TweetDate": "@triggerBody()['CreatedAt']",
+                                    "TweetId": "@triggerBody()['TweetId']",
+                                    "TweetText": "@triggerBody()['TweetText']"
+                                },
+                                "function": {
+                                    "id": "[concat(resourceId('Microsoft.Web/sites', parameters('sites_bjdfunctions_name')), '/functions/AnalyzeTweets')]"
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "twitter": {
+                                "connectionId": "[parameters('workflows_ProcessTwitterApp_connectionId')]",
+                                "connectionName": "twitter",
+                                "id": ""
+                            }
+                        }
+                    }
+                }
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_bjdfunctions_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "name": "[parameters('storageAccounts_bjdfunctionssa001_name')]",
+            "apiVersion": "2016-01-01",
+            "location": "southcentralus",
+            "tags": {},
+            "properties": {},
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            },
+            "kind": "linux",
+            "name": "[parameters('serverfarms_LinuxServicePlan_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "West US",
+            "properties": {
+                "name": "[parameters('serverfarms_LinuxServicePlan_name')]",
+                "numberOfWorkers": 1
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "Y1",
+                "tier": "Dynamic",
+                "size": "Y1",
+                "family": "Y",
+                "capacity": 0
+            },
+            "kind": "functionapp",
+            "name": "[parameters('serverfarms_SouthCentralUSPlan_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "South Central US",
+            "properties": {
+                "name": "[parameters('serverfarms_SouthCentralUSPlan_name')]",
+                "numberOfWorkers": 0
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "kind": "functionapp",
+            "name": "[parameters('sites_bjdfunctions_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "South Central US",
+            "properties": {
+                "name": "[parameters('sites_bjdfunctions_name')]",
+                "hostNames": [
+                    "bjdfunctions.azurewebsites.net"
+                ],
+                "enabledHostNames": [
+                    "bjdfunctions.azurewebsites.net",
+                    "bjdfunctions.scm.azurewebsites.net"
+                ],
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('sites_bjdfunctions_name'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(parameters('sites_bjdfunctions_name'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_SouthCentralUSPlan_name'))]"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_SouthCentralUSPlan_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "name": "[parameters('sites_bjdlinux_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "West US",
+            "tags": {
+            },
+            "properties": {
+                "name": "[parameters('sites_bjdlinux_name')]",
+                "hostNames": [
+                    "bjdlinux.azurewebsites.net"
+                ],
+                "enabledHostNames": [
+                    "bjdlinux.azurewebsites.net",
+                    "bjdlinux.scm.azurewebsites.net"
+                ],
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('sites_bjdlinux_name'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(parameters('sites_bjdlinux_name'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_LinuxServicePlan_name'))]"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_LinuxServicePlan_name'))]"
+            ]
+        }
+    ]
+}

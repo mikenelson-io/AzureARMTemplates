@@ -1,0 +1,55 @@
+{
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2015-08-01-preview/workflowdefinition.json#",
+    "actions": {
+        "TextAnalysis001": {
+            "conditions": [],
+            "inputs": {
+                "body": {
+                    "RetweetCount": "@triggerBody()['RetweetCount']",
+                    "TweetBy": "@triggerBody()['TweetedBy']",
+                    "TweetDate": "@triggerBody()['CreatedAt']",
+                    "TweetId": "@triggerBody()['TweetId']",
+                    "TweetText": "@triggerBody()['TweetText']"
+                },
+                "function": {
+                    "id": "/subscriptions/..../resourceGroups/ServerLessCompute-RG01/providers/Microsoft.Web/sites/bjdfunctions/functions/TextAnalysis001"
+                }
+            },
+            "type": "Function"
+        }
+    },
+    "contentVersion": "1.0.0.0",
+    "outputs": {},
+    "parameters": {
+        "$connections": {
+            "defaultValue": {},
+            "type": "Object"
+        }
+    },
+    "triggers": {
+        "When_a_new_tweet_appears": {
+            "conditions": [],
+            "inputs": {
+                "host": {
+                    "api": {
+                        "runtimeUrl": "https://logic-apis-westus.azure-apim.net/apim/twitter"
+                    },
+                    "connection": {
+                        "name": "@parameters('$connections')['twitter']['connectionId']"
+                    }
+                },
+                "method": "get",
+                "path": "/onnewtweet",
+                "queries": {
+                    "searchQuery": "#Azure"
+                }
+            },
+            "recurrence": {
+                "frequency": "Minute",
+                "interval": 1
+            },
+            "splitOn": "@triggerBody()?.value",
+            "type": "apiconnection"
+        }
+    }
+}

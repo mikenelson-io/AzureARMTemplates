@@ -1,0 +1,19 @@
+{
+  "bindings": [
+    {
+      "name": "PDFItem",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "messages",
+      "connection": "bjdpdffuncsa001_STORAGE"
+    },
+    {
+      "type": "blob",
+      "name": "outputBlob",
+      "path": "processed/{rand-guid}",
+      "connection": "bjdpdffuncsa001_STORAGE",
+      "direction": "out"
+    }
+  ],
+  "disabled": false
+}
