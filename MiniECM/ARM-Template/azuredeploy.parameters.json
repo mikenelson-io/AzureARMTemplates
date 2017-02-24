@@ -1,0 +1,27 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "function_app_storageAccounts_name": {
+            "value": "bjdecmsa004"
+        },
+        "serverfarms_plan_name": {
+            "value": "SouthCentralUSPlan"
+        },
+        "function_app_name": {
+            "value": "bjdecm"
+        },
+        "blob_archive_storageAccounts_name": {
+            "value": "bjdecmarchivesa00"
+        },
+        "blob_upload_storageAccounts_name": {
+            "value": "bjdecmuploadsa002"
+        },
+        "queue_storageAccounts_name": {
+            "value": "bjdecmqueuesa002"
+        },
+        "table_storageAccounts_name": {
+            "value": "bjdecmtablesa002"
+        }
+    }
+}

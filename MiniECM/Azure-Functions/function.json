@@ -1,0 +1,47 @@
+{
+  "bindings": [
+    {
+      "name": "queuedMessage",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "messages",
+      "connection": "bjdecmqueuesa002_STORAGE"
+    },
+    {
+      "type": "blob",
+      "name": "inputBlob",
+      "path": "processing/{queueTrigger}",
+      "connection": "bjdecmuploadsa002_STORAGE",
+      "direction": "in"
+    },
+    {
+      "type": "table",
+      "name": "outputTable",
+      "tableName": "RecordsRepository",
+      "connection": "bjdecmtablesa002_STORAGE",
+      "direction": "out"
+    },
+    {
+      "type": "blob",
+      "name": "outputBlob000",
+      "path": "processed/{rand-guid}",
+      "connection": "bjdecmarchivesa000_STORAGE",
+      "direction": "out"
+    },
+    {
+      "type": "blob",
+      "name": "outputBlob001",
+      "path": "processed/{rand-guid}",
+      "connection": "bjdecmarchivesa001_STORAGE",
+      "direction": "out"
+    },
+    {
+      "type": "blob",
+      "name": "outputBlob002",
+      "path": "processed/{rand-guid}",
+      "connection": "bjdecmarchivesa002_STORAGE",
+      "direction": "out"
+    }
+  ],
+  "disabled": false
+}

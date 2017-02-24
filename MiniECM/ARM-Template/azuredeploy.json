@@ -1,0 +1,187 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+        "function_app_storageAccounts_name": {
+            "type": "String"
+        },
+        "serverfarms_plan_name": {
+            "type": "String"
+        },
+        "function_app_name": {
+            "type": "String"
+        },
+        "blob_archive_storageAccounts_name": {
+            "type": "String"
+        },
+        "blob_upload_storageAccounts_name": {
+            "type": "String"
+        },
+        "queue_storageAccounts_name": {
+            "type": "String"
+        },
+        "table_storageAccounts_name": {
+            "type": "String"
+        }
+  },
+  "variables": {
+      "storageAPIVersion": "2016-01-01",
+      "appserviceAPIVersion": "2015-08-01",
+      "archiveStorageAccountCount": 3,
+      "storageType": "Standard_LRS",
+      "storageTier": "Standard"
+  },
+  "resources": [
+       {
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "[variables('storageType')]",
+                "tier": "[variables('storageTier')]"
+            },
+            "kind": "Storage",
+            "name": "[parameters('function_app_storageAccounts_name')]",
+            "apiVersion":  "[variables('storageAPIVersion')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+              "Purpose": "Storage Account for Function App"
+            },
+            "properties": {
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "[variables('storageType')]",
+                "tier": "[variables('storageTier')]"
+            },
+            "kind": "Storage",
+            "name": "[parameters('blob_upload_storageAccounts_name')]",
+            "apiVersion":  "[variables('storageAPIVersion')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+              "Purpose": "Storage Account for to Store Documents Before Processing"
+            },
+            "properties": {
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "[variables('storageType')]",
+                "tier": "[variables('storageTier')]"
+            },
+            "kind": "Storage",
+            "name": "[parameters('queue_storageAccounts_name')]",
+            "apiVersion":  "[variables('storageAPIVersion')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+              "Purpose": "Message Queue"
+            },
+            "properties": {
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "[variables('storageType')]",
+                "tier": "[variables('storageTier')]"
+            },
+            "kind": "Storage",
+            "name": "[parameters('table_storageAccounts_name')]",
+            "apiVersion":  "[variables('storageAPIVersion')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+              "Purpose": "Table Storage for Application"
+            },
+            "properties": {
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "[variables('storageType')]",
+                "tier": "[variables('storageTier')]"
+            },
+            "kind": "BlobStorage",
+            "name": "[concat(parameters('blob_archive_storageAccounts_name'), copyindex())]",
+            "copy": {
+              "name": "nicLoop",
+              "count": "[variables('archiveStorageAccountCount')]"
+            },
+            "apiVersion":  "[variables('storageAPIVersion')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+              "Purpose": "Archive Storage for Blobs"
+            },
+            "properties": {
+              "accessTier" : "Cool"
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "Y1",
+                "tier": "Dynamic",
+                "size": "Y1",
+                "family": "Y",
+                "capacity": 0
+            },
+            "kind": "functionapp",
+            "name": "[parameters('serverfarms_plan_name')]",
+            "apiVersion": "[variables('appserviceAPIVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[parameters('serverfarms_plan_name')]",
+                "numberOfWorkers": 0
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "kind": "functionapp",
+            "name": "[parameters('function_app_name')]",
+            "apiVersion": "[variables('appserviceAPIVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[parameters('function_app_name')]",
+                "hostNames": [
+                     "[concat(parameters('function_app_name'),'.azurewebsites.net')]"
+                ],
+                "enabledHostNames": [
+                     "[concat(parameters('function_app_name'),'.azurewebsites.net')]",
+                     "[concat(parameters('function_app_name'),'.scm.azurewebsites.net')]"
+                ],
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('function_app_name'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(parameters('function_app_name'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_plan_name'))]"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_plan_name'))]"
+            ]
+        }
+  ]
+}
