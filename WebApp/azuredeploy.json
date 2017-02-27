@@ -1,0 +1,247 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccountName": {
+            "type": "string"
+        },
+        "certificateThumbprint": {
+            "type": "string"
+        },
+        "servicePlanName": {
+            "type": "string"
+        },
+        "siteName": {
+            "type": "string"
+        },
+        "pfxPassword": {
+            "type": "securestring"
+        },
+        "pfxBlobValue": {
+            "type": "string"
+        },
+        "siteUrl": {
+            "type": "string"
+        },
+        "diagSASTokenUrl": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "apiVersionStorage": "2016-01-01",
+        "apiVersion": "2015-08-01",
+        "webFarmSize": "S2",
+        "webFarmCapacity": 2,
+        "repoUrl": "https://github.com/bjd145/MyFavoriteWineList",
+        "branch": "master"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "Standard_ZRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "name": "[parameters('storageAccountName')]",
+            "apiVersion": "[variables('apiVersionStorage')]",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "properties": {
+                "encryption": {
+                    "keySource": "Microsoft.Storage",
+                    "services": {
+                        "blob": {
+                            "enabled": true
+                        }
+                    }
+                }
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/certificates",
+            "name": "[parameters('certificateThumbprint')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "pfxBlob": "[parameters('pfxBlobValue')]",
+                "password": "[parameters('pfxPassword')]"
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "[variables('webFarmSize')]",
+                "tier": "Standard",
+                "size": "[variables('webFarmSize')]",
+                "family": "S",
+                "capacity": "[variables('webFarmCapacity')]"
+            },
+            "kind": "app",
+            "name": "[parameters('servicePlanName')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[parameters('servicePlanName')]",
+                "numberOfWorkers": 1
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "kind": "app",
+            "name": "[parameters('siteName')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+            },
+            "properties": {
+                "name": "[parameters('siteName')]",
+                "hostNames": [
+                    "[concat(parameters('siteName'),'.azurewebsites.net')]"
+                ],
+                "enabledHostNames": [
+                    "[concat(parameters('siteName'),'.azurewebsites.net')]",
+                    "[concat(parameters('siteName'),'.scm.azurewebsites.net')]",
+                    "[parameters('siteUrl')]"
+                ],
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('siteName'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(parameters('siteName'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[parameters('siteUrl')]",
+                        "sslState": 1,
+                        "thumbprint": "[parameters('certificateThumbprint')]",
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('servicePlanName'))]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "[variables('apiVersion')]",
+                    "name": "web",
+                    "type": "config",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', parameters('siteName'))]"
+                    ],
+                    "tags": {
+                        "displayName": "WebAppConfig"
+                    },
+                    "properties": {
+                        "netFrameworkVersion": "v4.6",
+                        "use32BitWorkerProcess": false, 
+                        "webSocketsEnabled": false,
+                        "alwaysOn": false,
+                        "managedPipelineMode": 0,
+                        "defaultDocuments": [
+                            "index.html",
+                            "default.aspx",
+                            "hostingstart.html"
+                        ]
+                    }
+                },
+                {
+                    "apiVersion": "[variables('apiVersion')]",
+                    "name":"web",
+                    "type":"sourcecontrols",
+                    "dependsOn":[
+                        "[resourceId('Microsoft.Web/Sites/', parameters('siteName'))]"
+                    ],
+                    "properties":{
+                        "RepoUrl": "[variables('repoUrl')]",
+                        "branch": "[variables('branch')]"
+                    }
+                },   
+                {
+                    "apiVersion": "[variables('apiVersion')]",
+                    "name": "[parameters('siteUrl')]",
+                    "type": "hostNameBindings",
+                    "tags": null,
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', parameters('siteName'))]"
+                    ],
+                    "properties": {
+                        "siteName":  "[parameters('siteName')]",
+                        "domainId": null,
+                        "hostNameType": "Verified",
+                        "sslState": "SniEnabled",
+                        "thumbprint": "[parameters('certificateThumbprint')]"
+                    }
+                },
+                {
+                    "apiVersion": "[variables('apiVersion')]",
+                    "name": "appsettings",
+                    "type": "config",
+                    "tags": {},
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', parameters('siteName'))]"
+                    ],
+                    "properties": {
+                        "WEBSITE_NODE_DEFAULT_VERSION": "4.4.7",
+                        "StorageName": "bjdstorage005",
+                        "StorageKey": "XGWatQMKR3U7SK4E6WUlA7j10gbh6Ad1EbuIAe9Pp9QjzjdXYgEAHzfHixEW5KcI6+47bjy05qRNoxt3eCzyVA=="
+                    }
+                },
+                {
+                    "apiVersion": "[variables('apiVersion')]",
+                    "name": "logs",
+                    "type": "config",
+                    "tags": {},
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', parameters('siteName'))]"
+                    ],
+                    "properties": {
+                        "applicationLogs": {
+                            "fileSystem": {
+                                "level": "Error"
+                            },
+                            "azureBlobStorage": {
+                                "level": "Error",
+                                "sasUrl": "[parameters('diagSASTokenUrl')]",
+                                "retentionInDays": null
+                            }
+                        },
+                        "httpLogs": {
+                            "azureBlobStorage": {
+                                "sasUrl": "[parameters('diagSASTokenUrl')]",
+                                "retentionInDays": null,
+                                "enabled": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "apiVersion": "[variables('apiVersion')]",
+                    "name": "Staging",
+                    "type": "slots",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]"
+                    ],
+                    "properties": {
+                    },
+                    "resources": []
+                }
+            ],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('servicePlanName'))]"
+            ]
+        }
+    ]
+}

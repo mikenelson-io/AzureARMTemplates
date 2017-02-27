@@ -1,0 +1,199 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachineName": {
+      "type": "string",
+      "metadata": {
+        "description": " Virtual Machine Name"
+      }
+    },
+    "virtualMachineSize": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual Machine Size"
+      },
+      "allowedValues": [
+        "Standard_DS1",
+        "Standard_DS2",
+        "Standard_DS3",
+        "Standard_DS4",
+        "Standard_DS11",
+        "Standard_DS12",
+        "Standard_DS13",
+        "Standard_DS14"
+      ],
+      "defaultValue": "Standard_DS4"
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual Machine Administrator User Name"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Virtual Machine Administrator Password"
+      }
+    },
+    "storageAccountType": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual Machine Storage Account Type"
+      },
+      "allowedValues": [
+        "Premium_LRS",
+        "Standard_LRS"
+      ],
+      "defaultValue": "Premium_LRS"
+    },
+    "networkInterfaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual Machine Network Interface Name"
+      }
+    },
+    "networkSecurityGroupName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual Machine Network Security Group Name"
+      }
+    }
+  },
+  "variables": {
+    "vnetID": "/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/DevTestLab/providers/Microsoft.Network/virtualNetworks/DevTestLabsVnetPublic",
+    "subnetRef": "[concat(variables('vnetId'), '/subnets/default')]"
+  },
+  "resources": [
+    {
+      "name": "[parameters('virtualMachineName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2016-04-30-preview",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]"
+      ],
+      "properties": {
+        "osProfile": {
+          "computerName": "[parameters('virtualMachineName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]",
+          "windowsConfiguration": {
+            "provisionVmAgent": "true"
+          }
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('virtualMachineSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftSQLServer",
+            "offer": "SQL2014SP1-WS2012R2",
+            "sku": "Enterprise",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "[parameters('storageAccountType')]"
+            }
+          },
+          "dataDisks": [
+            {
+              "createOption": "Empty",
+              "managedDisk": {
+                "storageAccountType": "[parameters('storageAccountType')]"
+              },
+              "lun": 0,
+              "diskSizeGB": "1023",
+              "caching": "ReadOnly"
+            },
+            {
+              "createOption": "Empty",
+              "managedDisk": {
+                "storageAccountType": "[parameters('storageAccountType')]"
+              },
+              "lun": 1,
+              "diskSizeGB": "1023",
+              "caching": "ReadOnly"
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaceName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "[parameters('networkInterfaceName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIpAddresses/', parameters('publicIpAddressName'))]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              },
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIpAddress": {
+                "id": "[resourceId(resourceGroup().Name,'Microsoft.Network/publicIpAddresses', parameters('publicIpAddressName'))]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId(resourceGroup().Name, 'Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
+        }
+      }
+    },
+    {
+      "name": "[parameters('publicIpAddressName')]",
+      "type": "Microsoft.Network/publicIpAddresses",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
+      }
+    },
+    {
+      "name": "[parameters('networkSecurityGroupName')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "default-allow-rdp",
+            "properties": {
+              "priority": 1000,
+              "sourceAddressPrefix": "*",
+              "protocol": "Tcp",
+              "destinationPortRange": "3389",
+              "access": "Allow",
+              "direction": "inbound",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*"
+            }
+          }]
+      }
+    }
+  ],
+  "outputs": {
+    "adminUsername": {
+      "type": "string",
+      "value": "[parameters('adminUsername')]"
+    }
+  }
+}
