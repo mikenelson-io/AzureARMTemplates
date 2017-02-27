@@ -128,7 +128,7 @@
     "suffixA9Size": "[concat('Standard_A9', variables('vmSizeSuffix'))]",
     "cnRDMASuffix": "[replace(replace(replace(variables('suffixCNSize'), variables('suffixA8Size'),'-rdma'), variables('suffixA9Size'),'-rdma'),variables('suffixCNSize'), '')]",
     "hnRDMASuffix": "[replace(replace(replace(variables('suffixHNSize'), variables('suffixA8Size'),'-rdma'), variables('suffixA9Size'),'-rdma'),variables('suffixHNSize'), '')]",
-    
+    "nbrCNPerStorageAccount": 30,
     "certSecrets": [
       {
         "sourceVault": {
