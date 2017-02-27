@@ -39,7 +39,7 @@
     },
     "computeNodeNumber": {
       "type": "int",
-      "defaultValue": 10,
+      "defaultValue": 2,
       "metadata": {
         "description": "The number of the compute nodes."
       }
@@ -124,6 +124,11 @@
     "vmSizeSuffix": "[uniqueString(resourceGroup().id)]",
     "suffixHNSize": "[concat(parameters('headNodeVMSize'), variables('vmSizeSuffix'))]",
     "suffixCNSize": "[concat(parameters('computeNodeVMSize'), variables('vmSizeSuffix'))]",
+    "suffixA8Size": "[concat('Standard_A8', variables('vmSizeSuffix'))]",
+    "suffixA9Size": "[concat('Standard_A9', variables('vmSizeSuffix'))]",
+    "cnRDMASuffix": "[replace(replace(replace(variables('suffixCNSize'), variables('suffixA8Size'),'-rdma'), variables('suffixA9Size'),'-rdma'),variables('suffixCNSize'), '')]",
+    "hnRDMASuffix": "[replace(replace(replace(variables('suffixHNSize'), variables('suffixA8Size'),'-rdma'), variables('suffixA9Size'),'-rdma'),variables('suffixHNSize'), '')]",
+    
     "certSecrets": [
       {
         "sourceVault": {
@@ -356,9 +361,5 @@
     }
   ],
   "outputs": {
-    "clusterDNSName": {
-      "type": "string",
-      "value": "[reference('setupClusterPublicIP').outputs.fqdn.value]"
-    }
   }
 }
