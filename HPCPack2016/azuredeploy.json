@@ -109,9 +109,9 @@
   },
   "variables": {
     "apiVersion": "2015-06-15",
-    "storageAccountNameHN": "abjddemolab8374",
+    "storageAccountNameHN": "dpbjddemolab5270",
     "storageAccountIdHN": "[resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountNameHN'))]",
-    "cnStorageAccountNamePrefix": "hpclabsa",
+    "cnStorageAccountNamePrefix": "dpbjddemolab5270",
     "vnetID": "/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/DevTestLab/providers/Microsoft.Network/virtualNetworks/DevTestLabsVnetHPC",
     "subnetRef": "/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/DevTestLab/providers/Microsoft.Network/virtualNetworks/DevTestLabsVnetHPC/subnets/default",
     "availabilitySetNameHN": "[concat(parameters('clusterName'), '-avset')]",
