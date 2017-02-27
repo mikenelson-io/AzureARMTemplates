@@ -47,23 +47,14 @@
         "Standard_LRS"
       ],
       "defaultValue": "Premium_LRS"
-    },
-    "networkInterfaceName": {
-      "type": "string",
-      "metadata": {
-        "description": "Virtual Machine Network Interface Name"
-      }
-    },
-    "networkSecurityGroupName": {
-      "type": "string",
-      "metadata": {
-        "description": "Virtual Machine Network Security Group Name"
-      }
     }
   },
   "variables": {
     "vnetID": "/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/DevTestLab/providers/Microsoft.Network/virtualNetworks/DevTestLabsVnetPublic",
-    "subnetRef": "[concat(variables('vnetId'), '/subnets/default')]"
+    "subnetRef": "[concat(variables('vnetId'), '/subnets/default')]",
+    "publicIpAddressName": "[parameters('virtualMachineName'), '-pip')]",
+    "networkSecurityGroupName": "[parameters('virtualMachineName'), '-nsg')]",
+    "networkInterfaceName": "[parameters('virtualMachineName'), '-nic')]"
   },
   "resources": [
     {
@@ -72,7 +63,7 @@
       "apiVersion": "2016-04-30-preview",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]"
       ],
       "properties": {
         "osProfile": {
@@ -100,24 +91,6 @@
             }
           },
           "dataDisks": [
-            {
-              "createOption": "Empty",
-              "managedDisk": {
-                "storageAccountType": "[parameters('storageAccountType')]"
-              },
-              "lun": 0,
-              "diskSizeGB": "1023",
-              "caching": "ReadOnly"
-            },
-            {
-              "createOption": "Empty",
-              "managedDisk": {
-                "storageAccountType": "[parameters('storageAccountType')]"
-              },
-              "lun": 1,
-              "diskSizeGB": "1023",
-              "caching": "ReadOnly"
-            }
           ]
         },
         "networkProfile": {
@@ -130,13 +103,12 @@
       }
     },
     {
-      "name": "[parameters('networkInterfaceName')]",
+      "name": "[variables('networkInterfaceName')]",
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIpAddresses/', parameters('publicIpAddressName'))]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]"
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -148,27 +120,27 @@
               },
               "privateIPAllocationMethod": "Dynamic",
               "publicIpAddress": {
-                "id": "[resourceId(resourceGroup().Name,'Microsoft.Network/publicIpAddresses', parameters('publicIpAddressName'))]"
+                "id": "[resourceId(resourceGroup().Name,'Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
               }
             }
           }
         ],
         "networkSecurityGroup": {
-          "id": "[resourceId(resourceGroup().Name, 'Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
+          "id": "[resourceId(resourceGroup().Name, 'Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
         }
       }
     },
     {
-      "name": "[parameters('publicIpAddressName')]",
+      "name": "[variables('publicIpAddressName')]",
       "type": "Microsoft.Network/publicIpAddresses",
       "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
       "properties": {
-        "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
+        "publicIpAllocationMethod": "dynamic"
       }
     },
     {
-      "name": "[parameters('networkSecurityGroupName')]",
+      "name": "[variables('networkSecurityGroupName')]",
       "type": "Microsoft.Network/networkSecurityGroups",
       "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
@@ -191,9 +163,6 @@
     }
   ],
   "outputs": {
-    "adminUsername": {
-      "type": "string",
-      "value": "[parameters('adminUsername')]"
-    }
+
   }
 }
