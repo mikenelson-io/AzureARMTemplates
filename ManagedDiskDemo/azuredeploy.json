@@ -52,9 +52,9 @@
   "variables": {
     "vnetID": "/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/DevTestLab/providers/Microsoft.Network/virtualNetworks/DevTestLabsVnetPublic",
     "subnetRef": "[concat(variables('vnetId'), '/subnets/default')]",
-    "publicIpAddressName": "[parameters('virtualMachineName'), '-pip')]",
-    "networkSecurityGroupName": "[parameters('virtualMachineName'), '-nsg')]",
-    "networkInterfaceName": "[parameters('virtualMachineName'), '-nic')]"
+    "publicIpAddressName": "[concat(parameters('virtualMachineName'), '-pip')]",
+    "networkSecurityGroupName": "[concat(parameters('virtualMachineName'), '-nsg')]",
+    "networkInterfaceName": "[concat(parameters('virtualMachineName'), '-nic')]"
   },
   "resources": [
     {
