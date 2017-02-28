@@ -5,25 +5,13 @@
         "storageAccountName": {
             "type": "string"
         },
-        "certificateThumbprint": {
-            "type": "string"
-        },
         "servicePlanName": {
             "type": "string"
         },
         "siteName": {
             "type": "string"
         },
-        "pfxPassword": {
-            "type": "securestring"
-        },
-        "pfxBlobValue": {
-            "type": "string"
-        },
         "siteUrl": {
-            "type": "string"
-        },
-        "diagSASTokenUrl": {
             "type": "string"
         }
     },
@@ -56,18 +44,6 @@
                         }
                     }
                 }
-            },
-            "resources": [],
-            "dependsOn": []
-        },
-        {
-            "type": "Microsoft.Web/certificates",
-            "name": "[parameters('certificateThumbprint')]",
-            "apiVersion": "[variables('apiVersion')]",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "pfxBlob": "[parameters('pfxBlobValue')]",
-                "password": "[parameters('pfxPassword')]"
             },
             "resources": [],
             "dependsOn": []
@@ -170,22 +146,6 @@
                 },   
                 {
                     "apiVersion": "[variables('apiVersion')]",
-                    "name": "[parameters('siteUrl')]",
-                    "type": "hostNameBindings",
-                    "tags": null,
-                    "dependsOn": [
-                        "[concat('Microsoft.Web/sites/', parameters('siteName'))]"
-                    ],
-                    "properties": {
-                        "siteName":  "[parameters('siteName')]",
-                        "domainId": null,
-                        "hostNameType": "Verified",
-                        "sslState": "SniEnabled",
-                        "thumbprint": "[parameters('certificateThumbprint')]"
-                    }
-                },
-                {
-                    "apiVersion": "[variables('apiVersion')]",
                     "name": "appsettings",
                     "type": "config",
                     "tags": {},
@@ -194,7 +154,6 @@
                     ],
                     "properties": {
                         "WEBSITE_NODE_DEFAULT_VERSION": "4.4.7",
-                        "StorageName": "bjdstorage005",
                         "StorageKey": "XGWatQMKR3U7SK4E6WUlA7j10gbh6Ad1EbuIAe9Pp9QjzjdXYgEAHzfHixEW5KcI6+47bjy05qRNoxt3eCzyVA=="
                     }
                 },
