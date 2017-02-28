@@ -152,32 +152,6 @@
                 },
                 {
                     "apiVersion": "[variables('apiVersion')]",
-                    "name": "logs",
-                    "type": "config",
-                    "tags": {},
-                    "dependsOn": [
-                        "[concat('Microsoft.Web/sites/', parameters('siteName'))]"
-                    ],
-                    "properties": {
-                        "applicationLogs": {
-                            "fileSystem": {
-                                "level": "Error"
-                            },
-                            "azureBlobStorage": {
-                                "level": "Error",
-                                "retentionInDays": null
-                            }
-                        },
-                        "httpLogs": {
-                            "azureBlobStorage": {
-                                "retentionInDays": null,
-                                "enabled": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "apiVersion": "[variables('apiVersion')]",
                     "name": "Staging",
                     "type": "slots",
                     "location": "[resourceGroup().location]",
