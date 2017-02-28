@@ -108,12 +108,17 @@
     }
   },
   "variables": {
+    "virtualNetworkName": "DevTestLabsVnetHPC",
+    "subnet1Name": "default",
+    "DevTestLabResourceGroupName": "DevTestLab",
     "apiVersion": "2015-06-15",
+    "storageAccountType": "Standard_LRS",
     "storageAccountNameHN": "dpbjddemolab5270",
-    "storageAccountIdHN": "[resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountNameHN'))]",
-    "cnStorageAccountNamePrefix": "dpbjddemolab5270",
-    "vnetID": "/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/DevTestLab/providers/Microsoft.Network/virtualNetworks/DevTestLabsVnetHPC",
-    "subnetRef": "/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/DevTestLab/providers/Microsoft.Network/virtualNetworks/DevTestLabsVnetHPC/subnets/default",
+    "storageAccountIdHN": "[concat('/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/', variables('DevTestLabResourceGroupName'), '/providers/Microsoft.Storage/storageAccounts/',variables('storageAccountNameHN'))]",
+    "cnStorageAccountNamePrefix": "[concat('hpc', uniqueString(resourceGroup().id, parameters('computeNodeNamePrefix')))]",
+    "cnStorageAccountNumber": "[add(div(sub(parameters('computeNodeNumber'), 1), variables('nbrCNPerStorageAccount')), 1)]",
+    "vnetID": "[concat('/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/', variables('DevTestLabResourceGroupName'), '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+    "subnetRef": "[concat('/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/', variables('DevTestLabResourceGroupName'), '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('subnet1Name'))]",
     "availabilitySetNameHN": "[concat(parameters('clusterName'), '-avset')]",
     "cnAvailabilitySetNamePrefix": "[concat(parameters('computeNodeNamePrefix'), 'avset')]",
     "nbrVMPerAvailabilitySet": 80,
@@ -202,6 +207,7 @@
       "name": "[parameters('clusterName')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameHN'))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -263,7 +269,7 @@
             "VNet": "[variables('virtualNetworkName')]",
             "Subnet": "[variables('subnet1Name')]",
             "Location": "[resourceGroup().location]",
-            "ResourceGroup": "[resourceGroup().name]"
+            "ResourceGroup": "[variables('DevTestLabResourceGroupName')]"
           }
         },
         "protectedSettings": {
@@ -288,11 +294,25 @@
       }
     },
     {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[concat(variables('cnStorageAccountNamePrefix'), padLeft(string(copyIndex()), 2, '0'))]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "cnStorageAccountCopy",
+        "count": "[variables('cnStorageAccountNumber')]"
+      },
+      "properties": {
+        "accountType": "[variables('storageAccountType')]"
+      }
+    },
+    {
       "apiVersion": "2015-01-01",
       "type": "Microsoft.Resources/deployments",
       "name": "[concat('create', parameters('computeNodeNamePrefix'), padLeft(string(copyIndex()), 3, '0'))]",
       "dependsOn": [
-        "[concat('Microsoft.Compute/availabilitySets/', variables('cnAvailabilitySetNamePrefix'), padLeft(string(div(copyIndex(), variables('nbrVMPerAvailabilitySet'))), 2, '0'))]"
+        "[concat('Microsoft.Compute/availabilitySets/', variables('cnAvailabilitySetNamePrefix'), padLeft(string(div(copyIndex(), variables('nbrVMPerAvailabilitySet'))), 2, '0'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('cnStorageAccountNamePrefix'), padLeft(string(div(copyIndex(), variables('nbrCNPerStorageAccount'))), 2, '0'))]"
       ],
       "copy": {
         "name": "CN",
