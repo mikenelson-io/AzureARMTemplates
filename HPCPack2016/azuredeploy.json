@@ -113,8 +113,8 @@
     "DevTestLabResourceGroupName": "DevTestLab",
     "apiVersion": "2015-06-15",
     "storageAccountType": "Standard_LRS",
-    "storageAccountNameHN": "dpbjddemolab5270",
-    "storageAccountIdHN": "[concat('/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/', variables('DevTestLabResourceGroupName'), '/providers/Microsoft.Storage/storageAccounts/',variables('storageAccountNameHN'))]",
+    "storageAccountNameHN": "[concat('hpc', uniqueString(resourceGroup().id, parameters('clusterName')))]",
+    "storageAccountIdHN": "[resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountNameHN'))]",
     "cnStorageAccountNamePrefix": "[concat('hpc', uniqueString(resourceGroup().id, parameters('computeNodeNamePrefix')))]",
     "cnStorageAccountNumber": "[add(div(sub(parameters('computeNodeNumber'), 1), variables('nbrCNPerStorageAccount')), 1)]",
     "vnetID": "[concat('/subscriptions/2deb88fe-eca8-499a-adb9-6e0ea8b6c1d2/resourceGroups/', variables('DevTestLabResourceGroupName'), '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
@@ -180,6 +180,15 @@
     "sharedResxBaseUrl": "https://raw.githubusercontent.com/MsHpcPack/HPCPack2016/master/newcluster-templates/shared-resources"
   },
   "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountNameHN')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "accountType": "[variables('storageAccountType')]"
+      }
+    },
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
