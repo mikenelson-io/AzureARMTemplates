@@ -10,6 +10,12 @@
         },
         "siteName": {
             "type": "string"
+        },
+        "ProjectName" : {
+            "type": "string"
+        },
+        "ProjectName" : { 
+            "type": "string"
         }
     },
     "variables": {
@@ -31,7 +37,10 @@
             "name": "[parameters('storageAccountName')]",
             "apiVersion": "[variables('apiVersionStorage')]",
             "location": "[resourceGroup().location]",
-            "tags": {},
+            "tags": {
+                "Project Owner": "[parameters('ProjectName')]",
+                "Project ": "[parameters('ProjectName')]"
+            },
             "properties": {
                 "encryption": {
                     "keySource": "Microsoft.Storage",
@@ -62,6 +71,10 @@
                 "name": "[parameters('servicePlanName')]",
                 "numberOfWorkers": 1
             },
+            "tags": {
+                "Project Owner": "[parameters('ProjectName')]",
+                "Project ": "[parameters('ProjectName')]"
+            },
             "resources": [],
             "dependsOn": []
         },
@@ -71,7 +84,9 @@
             "name": "[parameters('siteName')]",
             "apiVersion": "[variables('apiVersion')]",
             "location": "[resourceGroup().location]",
-            "tags": {
+             "tags": {
+                "Project Owner": "[parameters('ProjectName')]",
+                "Project ": "[parameters('ProjectName')]"
             },
             "properties": {
                 "name": "[parameters('siteName')]",
@@ -121,18 +136,6 @@
                             "hostingstart.html"
                         ]
                     }
-                },
-                {
-                    "apiVersion": "[variables('apiVersion')]",
-                    "name":"web",
-                    "type":"sourcecontrols",
-                    "dependsOn":[
-                        "[resourceId('Microsoft.Web/Sites/', parameters('siteName'))]"
-                    ],
-                    "properties":{
-                        "RepoUrl": "[variables('repoUrl')]",
-                        "branch": "[variables('branch')]"
-                    }
                 },   
                 {
                     "apiVersion": "[variables('apiVersion')]",
@@ -162,13 +165,11 @@
                             },
                             "azureBlobStorage": {
                                 "level": "Error",
-                                "sasUrl": "[parameters('diagSASTokenUrl')]",
                                 "retentionInDays": null
                             }
                         },
                         "httpLogs": {
                             "azureBlobStorage": {
-                                "sasUrl": "[parameters('diagSASTokenUrl')]",
                                 "retentionInDays": null,
                                 "enabled": true
                             }
@@ -183,6 +184,10 @@
                     "dependsOn": [
                         "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]"
                     ],
+                    "tags": {
+                        "Project Owner": "[parameters('ProjectName')]",
+                        "Project ": "[parameters('ProjectName')]"
+                    },
                     "properties": {
                     },
                     "resources": []
