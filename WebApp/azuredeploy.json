@@ -10,9 +10,6 @@
         },
         "siteName": {
             "type": "string"
-        },
-        "siteUrl": {
-            "type": "string"
         }
     },
     "variables": {
@@ -83,8 +80,7 @@
                 ],
                 "enabledHostNames": [
                     "[concat(parameters('siteName'),'.azurewebsites.net')]",
-                    "[concat(parameters('siteName'),'.scm.azurewebsites.net')]",
-                    "[parameters('siteUrl')]"
+                    "[concat(parameters('siteName'),'.scm.azurewebsites.net')]"
                 ],
                 "hostNameSslStates": [
                     {
@@ -97,12 +93,6 @@
                         "name": "[concat(parameters('siteName'),'.scm.azurewebsites.net')]",
                         "sslState": 0,
                         "thumbprint": null,
-                        "ipBasedSslState": 0
-                    },
-                    {
-                        "name": "[parameters('siteUrl')]",
-                        "sslState": 1,
-                        "thumbprint": "[parameters('certificateThumbprint')]",
                         "ipBasedSslState": 0
                     }
                 ],
