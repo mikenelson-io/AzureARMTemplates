@@ -11,7 +11,7 @@
         "siteName": {
             "type": "string"
         },
-        "ProjectName" : {
+        "ProjectOwner" : {
             "type": "string"
         },
         "ProjectName" : { 
@@ -38,7 +38,7 @@
             "apiVersion": "[variables('apiVersionStorage')]",
             "location": "[resourceGroup().location]",
             "tags": {
-                "Project Owner": "[parameters('ProjectName')]",
+                "Project Owner": "[parameters('ProjectOwner')]",
                 "Project ": "[parameters('ProjectName')]"
             },
             "properties": {
@@ -72,7 +72,7 @@
                 "numberOfWorkers": 1
             },
             "tags": {
-                "Project Owner": "[parameters('ProjectName')]",
+                "Project Owner": "[parameters('ProjectOwner')]",
                 "Project ": "[parameters('ProjectName')]"
             },
             "resources": [],
@@ -85,7 +85,7 @@
             "apiVersion": "[variables('apiVersion')]",
             "location": "[resourceGroup().location]",
              "tags": {
-                "Project Owner": "[parameters('ProjectName')]",
+                "Project Owner": "[parameters('ProjectOwner')]",
                 "Project ": "[parameters('ProjectName')]"
             },
             "properties": {
@@ -185,7 +185,7 @@
                         "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]"
                     ],
                     "tags": {
-                        "Project Owner": "[parameters('ProjectName')]",
+                        "Project Owner": "[parameters('ProjectOwner')]",
                         "Project ": "[parameters('ProjectName')]"
                     },
                     "properties": {
