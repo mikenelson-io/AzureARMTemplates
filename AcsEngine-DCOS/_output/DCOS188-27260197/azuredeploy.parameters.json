@@ -1,0 +1,47 @@
+{
+  "agentprivateCount": {
+    "value": 3
+  },
+  "agentprivateVMSize": {
+    "value": "Standard_D2_v2"
+  },
+  "agentprivateVnetSubnetID": {
+    "value": "/subscriptions/xyz/resourceGroups/DevSub01_Network_RG/providers/Microsoft.Network/virtualNetworks/DevSub01-VNet-001/subnets/DCOS-Agents"
+  },
+  "agentpublicCount": {
+    "value": 3
+  },
+  "agentpublicEndpointDNSNamePrefix": {
+    "value": "bjdacse-agents"
+  },
+  "agentpublicVMSize": {
+    "value": "Standard_D2_v2"
+  },
+  "agentpublicVnetSubnetID": {
+    "value": "/subscriptions/xyz/resourceGroups/DevSub01_Network_RG/providers/Microsoft.Network/virtualNetworks/DevSub01-VNet-001/subnets/DCOS-Agents"
+  },
+  "dcosBootstrapURL": {
+    "value": "https://dcosio.azureedge.net/dcos/stable/bootstrap/5df43052907c021eeb5de145419a3da1898c58a5.bootstrap.tar.xz"
+  },
+  "firstConsecutiveStaticIP": {
+    "value": "10.2.10.5"
+  },
+  "linuxAdminUsername": {
+    "value": "manager"
+  },
+  "masterEndpointDNSNamePrefix": {
+    "value": "bjdacse-master"
+  },
+  "masterVMSize": {
+    "value": "Standard_D2_v2"
+  },
+  "masterVnetSubnetID": {
+    "value": "/subscriptions/xyz/resourceGroups/DevSub01_Network_RG/providers/Microsoft.Network/virtualNetworks/DevSub01-VNet-001/subnets/DCOS"
+  },
+  "sshRSAPublicKey": {
+    "value": ""
+  },
+  "targetEnvironment": {
+    "value": "AzurePublicCloud"
+  }
+}
